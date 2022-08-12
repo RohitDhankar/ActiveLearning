@@ -1,15 +1,12 @@
 from abc import abstractmethod
-from typing import Any
+
+from foil_types import *
 
 from foil import FOIL
 
 from label import label
 
 import numpy as np
-
-from data import Foily, FoilX, FoilXItem, get_data
-
-FoilRules = dict[str, list[Any]]
 
 class FoilBase:
     def __init__(self) -> None:
@@ -69,13 +66,16 @@ class FoilImageClassifier(FoilBase):
         super().__init__()
 
     @staticmethod
-    def parse_manual_data(image_meta_data, interpretation) -> FoilXItem:
+    def parse_data(image_meta_data, interpretation, isManual=True) -> FoilXItem:
         X: FoilXItem = {
             "imageId": image_meta_data['imageId'],
         }
         for key, value in interpretation.items():
             X[key] = value
-        y = image_meta_data['labels'][0]['name'][0]
+        if(isManual):
+            y = image_meta_data['labels'][0]['name'][0]
+        else:
+            y = None
         return X, y
 
     def fit(self, X: FoilX, y: Foily, d={}, l={}) -> None:
@@ -124,15 +124,3 @@ class FoilImageClassifier(FoilBase):
             prob = 1 / list_len
             result.append(prob)
         return result
-
-
-if __name__ == '__main__':
-    # print(FoilImageClassifier.parse_manual_data({'imageId': '1', 'name': 'lol', 'labels': [{'name': ['motorcyclist']}]}, {'object_detect': {'object': 'person'}, 'panoptic_segmentation': {'1': 'person'}, 'semantic_segmentation': {'1': '2'}}))
-    X, y = get_data()
-    model = FoilImageClassifier()
-    model.fit(X, y)
-    # model.print_rules()
-    # model.print_object_list()
-    # print(model.predict_proba([X[4]]))
-    # print(model.score([X[0], X[1], X[2], X[3], X[4]], [y[0], y[1], y[2], y[3], y[4]]))
-    pass

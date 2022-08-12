@@ -5,11 +5,11 @@ import numpy as np
 
 from FoilModel import FoilImageClassifier
 
-from data import get_data
+from data import get_data_from_file
 
 model = FoilImageClassifier()
 
-X, y = get_data()
+X, y = get_data_from_file()
 
 X_train = np.array(X[:10])
 y_train = np.array(y[:10])
