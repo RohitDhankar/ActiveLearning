@@ -5,11 +5,13 @@ import numpy as np
 
 from FoilModel import FoilImageClassifier
 
-from data import get_data_from_file
+from data import ClassificationDataManager
 
 model = FoilImageClassifier()
 
-X, y = get_data_from_file()
+data_parser = ClassificationDataManager()
+
+X, y = data_parser.get_data_from_file()
 
 X_train = np.array(X[:10])
 y_train = np.array(y[:10])
