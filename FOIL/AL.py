@@ -11,13 +11,13 @@ model = FoilImageClassifier()
 
 data_parser = ClassificationDataManager()
 
-X, y = data_parser.get_data_from_file()
+X, X_unlabeled, y = data_parser.get_data_from_file()
 
-X_train = np.array(X[:10])
-y_train = np.array(y[:10])
-X_test = np.array(X[10:])
-y_test = np.array(y[10:])
-initial_idx = np.array([0, 5])
+X_train = np.array(X[:25])
+y_train = np.array(y[:25])
+X_test = np.array(X[-10:])
+y_test = np.array(y[-10:])
+initial_idx = np.array([0, 11, 24])
 X_initial = X_train[initial_idx]
 y_initial = y_train[initial_idx]
 X_pool = np.delete(X_train, initial_idx, axis=0)
@@ -32,6 +32,7 @@ def uncertainty_sampling_strategy(classifier, X, n_instances=1):
     probs = np.array(classifier.predict_proba(X))
     print(probs)
     query_idx = np.argsort(probs)[:n_instances]
+    print(query_idx, X[query_idx][0]['imageId'])
     return query_idx, X[query_idx]
 
 learner = ActiveLearner(
