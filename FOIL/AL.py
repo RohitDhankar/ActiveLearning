@@ -30,9 +30,9 @@ def random_query_strategy(classifier, X, n_instances=1):
 
 def uncertainty_sampling_strategy(classifier, X, n_instances=1):
     probs = np.array(classifier.predict_proba(X))
-    print(probs)
+    print(f"Uncertianty: {probs}")
     query_idx = np.argsort(probs)[:n_instances]
-    print(query_idx, X[query_idx][0]['imageId'])
+    print(f"Seleted to label: {query_idx}")
     return query_idx, X[query_idx]
 
 learner = ActiveLearner(
@@ -43,7 +43,7 @@ learner = ActiveLearner(
 
 n_queries = 5
 for i in range(n_queries):
-    print(f"Round {i}: {learner.score(X_test, y_test)}")
+    print(f"Round {i}: Accuracy = {learner.score(X_test, y_test)}")
     print(f"Current training set length: {len(learner.X_training)}")
     query_idx, query_item = learner.query(X_pool, n_instances=1)
     learner.teach(X_pool[query_idx], y_pool[query_idx])
