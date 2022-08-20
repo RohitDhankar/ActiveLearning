@@ -1,13 +1,21 @@
 from modAL.models import ActiveLearner
 from modAL.uncertainty import entropy_sampling
 
+import matplotlib as mpl
+mpl.use('Agg')
+
 import numpy as np
 import copy
+import platform
+
+from sklearn.model_selection import train_test_split 
 
 from FoilModel import FoilImageClassifier
 from data import ClassificationDataManager
 from strategies.diversity import diversity_sampling_strategy_global
 from strategies.representativeness import representativeness_query_strategy
+
+np.random.seed(1)
 
 class ActiveLearningManager:
     def __init__(self, learner: ActiveLearner, X_pool, y_pool, X_test, y_test) -> None:
@@ -16,6 +24,10 @@ class ActiveLearningManager:
         self.y_pool = y_pool
         self.X_test = X_test
         self.y_test = y_test
+        self.display_method = 'show'
+
+    def set_display_method(self, method: str) -> None:
+        self.display_method = method
 
     def run_active_learning(self, n_queries: int, n_instances: int, plot=True, **query_args):
         query_lst = []
@@ -38,7 +50,10 @@ class ActiveLearningManager:
                 plt.xlabel(f"Query(+{n_instances} instance(s) per round)")
                 plt.ylabel('Accuracy')
                 plt.legend()
-                plt.show()
+                if self.display_method == 'show':
+                    plt.show()
+                elif self.display_method == 'save':
+                    plt.savefig("result.png")
         return query_lst, acc_lst
 
     def run_against_random(self, n_queries: int, n_instances: int, plot=True, **query_args) -> None:
@@ -71,7 +86,10 @@ class ActiveLearningManager:
                 plt.xlabel(f"Query(+{n_instances} instance(s) per round)")
                 plt.ylabel('Accuracy')
                 plt.legend()
-                plt.show()
+                if self.display_method == 'show':
+                    plt.show()
+                elif self.display_method == 'save':
+                    plt.savefig("result.png")
 
 model = FoilImageClassifier()
 
@@ -79,15 +97,21 @@ data_parser = ClassificationDataManager()
 
 X, X_unlabeled, y = data_parser.get_data_from_file()
 
-X_train = np.array(X[:90])
-y_train = np.array(y[:90])
-X_test = np.array(X[-30:])
-y_test = np.array(y[-30:])
-initial_idx = np.array([0, 11, 24])
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train = np.array(X_train)
+y_train = np.array(y_train)
+X_test = np.array(X_test)
+y_test = np.array(y_test)
+
+# for idx, v in enumerate(y_train):
+#     print(f"{idx}: {v}")
+initial_idx = np.array([0, 1, 5, 7])
 X_initial = X_train[initial_idx]
 y_initial = y_train[initial_idx]
 X_pool = np.delete(X_train, initial_idx, axis=0)
 y_pool = np.delete(y_train, initial_idx, axis=0)
+
+print(len(X_train), len(X_pool), len(X_test))
 
 def random_query_strategy(classifier, X, n_instances=1):
     query_idx = np.random.choice(range(len(X)), size=n_instances, replace=False)
@@ -109,7 +133,8 @@ learner = ActiveLearner(
 )
 
 active_learner = ActiveLearningManager(learner, X_pool, y_pool, X_test, y_test)
-active_learner.run_against_random(n_queries=50, n_instances=1)
+active_learner.set_display_method('show' if platform.system() == 'Windows' else 'save')
+active_learner.run_against_random(n_queries=20, n_instances=5)
 
 # print(similarity_sample(X_train[2], X_train[1]))
 # print(diversity_sampling_strategy_global(None, X, 5))

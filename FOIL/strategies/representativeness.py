@@ -12,20 +12,19 @@ from FoilModel import FoilImageClassifier
 
 def representativeness_query_strategy(classifier: ActiveLearner, X, n_instances=1):
     model: FoilImageClassifier = classifier.estimator
-    X_vec = featurelize(X, model.get_object_list())
-    X_density = compute_density(X_vec)
-    X_density_sorted_idx = np.argsort(X_density)
-    print(f"Selected idx by representative: {X_density_sorted_idx[-n_instances:]}")
-    return X_density_sorted_idx[-n_instances:], X[-n_instances:]
+    X_utility = compute_utility(X, model)
+    X_utility_sorted_idx = np.argsort(X_utility)
+    print(f"Selected idx by representative: {X_utility_sorted_idx[-n_instances:]}")
+    return X_utility_sorted_idx[-n_instances:], X[-n_instances:]
 
 
 # Helpers
 
-def compute_density(X):
+def compute_utility(X, model: FoilImageClassifier):
     """
-    Compute the density of the given data.
-    formula: sum(similarity(x1, x2)) / n-1
+    Compute the utility of the given data.
     """
+    X_vec_basic = featurelize_basic(X, model.get_object_list())
     n = len(X)
     result = []
     for i in range(n):
@@ -33,9 +32,32 @@ def compute_density(X):
         for j in range(n):
             if i == j:
                 continue
-            density += compute_similarity_measure(X[i], X[j])
+            # concat new features on xi and xj
+            ## xi
+            xi_basic_vec = X_vec_basic[i]
+            xi_overlap_vec = featurelize_overlap(X[i], X[j])
+
+            xi_vec = np.array(xi_basic_vec + xi_overlap_vec)
+            #3 xj
+            xj_basic_score = X_vec_basic[j]
+            xj_overlap_vec = featurelize_overlap(X[i], X[j])
+
+            xj_vec = np.array(xj_basic_score + xj_overlap_vec)
+
+            # calculate similarity
+            density += compute_similarity_measure(xi_vec, xj_vec)
         result.append(density / (n - 1))
-    return np.array(result)
+    
+    
+def featurelize_overlap(x1, x2):
+    """
+    Featurelize the given data X by counting same overlaps.
+
+    @param X: The data to featurelize.
+    @param object_lst: The list of objects for the data.
+    @return: The featurelized data for overlap only.
+    """
+    return []
 
 def compute_similarity_measure(x1, x2):
     """
@@ -44,7 +66,7 @@ def compute_similarity_measure(x1, x2):
     """
     return np.dot(x1, x2) / (np.linalg.norm(x1) * np.linalg.norm(x2))
 
-def featurelize(X, object_lst: list[str]):
+def featurelize_basic(X, object_lst: list[str]):
     """
     Featurelize the given data X by mapping objects to one-hot vectors.
 
@@ -62,7 +84,7 @@ def featurelize(X, object_lst: list[str]):
             # else:
             #     print(f"Object not found: {obj}")
         X_vectors.append(vec)
-    return np.array(X_vectors)
+    return X_vectors
 
 def get_objects(X) -> list[list[str]]:
     """

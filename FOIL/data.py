@@ -79,10 +79,11 @@ class ClassificationDataManager:
 
 if __name__ == '__main__':
     data_parser = ClassificationDataManager()
-    data_parser.save_data_to_file(from_db=True)
+    # data_parser.save_data_to_file(from_db=True)
     X, X_unlabeled, y = data_parser.get_data_from_file()
-    print('X[0]: ', X[0])
-    print('y[0]: ', y[0])
-    print(len(X))
+    # print('X[0]: ', X[0])
+    # print('y[0]: ', y[0])
+    for idx, v in enumerate(y):
+        print(f"{idx}: {v}")
     # print(X_unlabeled[0])
     pass
