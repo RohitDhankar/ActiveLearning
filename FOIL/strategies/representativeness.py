@@ -110,6 +110,6 @@ if __name__ == '__main__':
     model.fit(X, y)
     # print(model.print_object_list())
     print('====================')
-    result = featurelize(X, model.get_object_list())
+    result = featurelize_basic(X, model.get_object_list())
     print(compute_similarity_measure(result[0], result[2]))
     pass
