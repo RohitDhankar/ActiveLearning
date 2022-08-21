@@ -78,7 +78,7 @@ def measure_informativeness_certain(X, sample):
     for i in range(0, len(X)):
         objs = X_objs[i]
         results[i] += len(objs)
-        results[i] += objs.count(panel)
+        results[i] -= objs.count(panel)
     np.append(results, len(sample_objs) - sample_objs.count(panel))
     return min_max_norm(results)[-1]
 
