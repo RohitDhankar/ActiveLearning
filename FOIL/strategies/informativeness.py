@@ -5,7 +5,7 @@ import sys
 import os
 from FoilModel import FoilImageClassifier
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "../.."))
 
 
 def informativeness_query_strategy(classifier: ActiveLearner, X, n_instances=1):
@@ -32,6 +32,21 @@ def get_panel_obj(X_objs):
     return max(common_objs, key=common_objs.count)
 
 
+def get_panel(X_objs, y):
+    results = {}
+    for i in range(0,len(X_objs)):
+        if y[i] not in results:
+            results[y[i]] = []
+        results[y[i]].append(i)
+    output = {}
+    for key, value in results.items():
+        temp = []
+        for item in value:
+            temp.append(X_objs[item])
+        output[key] = get_panel_obj(temp)
+    return output
+
+
 def min_max_norm(results):
     norm_list = []
     min_value = min(results)
@@ -49,7 +64,7 @@ def measure_informativeness_all(X):
     for i in range(0, len(X)):
         objs = X_objs[i]
         unique_objts = np.unique(objs)
-        results[i] += len(unique_objts)
+        results[i] += len(objs)
         if panel in unique_objts:
             results[i] -= objs.count(panel)
     return min_max_norm(results)

@@ -1,5 +1,4 @@
 from modAL.models import ActiveLearner
-from modAL.uncertainty import entropy_sampling
 
 import matplotlib as mpl
 
@@ -13,9 +12,7 @@ from sklearn.model_selection import train_test_split
 
 from FoilModel import FoilImageClassifier
 from data import ClassificationDataManager
-from strategies.diversity import diversity_sampling_strategy_global
-from strategies.representativeness import representativeness_query_strategy
-from infomativeStrategies import informativeness_query_strategy
+from FOIL.strategies.informativeness import informativeness_query_strategy
 
 np.random.seed(1)
 
