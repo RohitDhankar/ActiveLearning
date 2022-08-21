@@ -132,7 +132,7 @@ MNIST
 
 .idea
 
-data
+FOIL/data
 
 *.png
 

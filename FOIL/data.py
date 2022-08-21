@@ -23,7 +23,7 @@ class ClassificationDataManager:
         images: list[object] = images_collection.find({})
         # Get all imageMetaDatas
         ws = workspaces_collection.find_one({})
-        image_meta_datas = ws['collections'][0]['images']
+        image_meta_datas = ws['collections'][1]['images']
         
         # Get X, y
         X = []

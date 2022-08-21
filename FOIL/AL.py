@@ -2,20 +2,23 @@ from modAL.models import ActiveLearner
 from modAL.uncertainty import entropy_sampling
 
 import matplotlib as mpl
+
 mpl.use('Agg')
 
 import numpy as np
 import copy
 import platform
 
-from sklearn.model_selection import train_test_split 
+from sklearn.model_selection import train_test_split
 
 from FoilModel import FoilImageClassifier
 from data import ClassificationDataManager
 from strategies.diversity import diversity_sampling_strategy_global
 from strategies.representativeness import representativeness_query_strategy
+from infomativeStrategies import informativeness_query_strategy
 
 np.random.seed(1)
+
 
 class ActiveLearningManager:
     def __init__(self, learner: ActiveLearner, X_pool, y_pool, X_test, y_test) -> None:
@@ -42,7 +45,7 @@ class ActiveLearningManager:
             self.learner.teach(self.X_pool[query_idx], self.y_pool[query_idx])
             self.X_pool = np.delete(self.X_pool, query_idx, axis=0)
             self.y_pool = np.delete(self.y_pool, query_idx, axis=0)
-        
+
         if plot:
             import matplotlib.pyplot as plt
             with plt.style.context('seaborn-whitegrid'):
@@ -91,6 +94,7 @@ class ActiveLearningManager:
                 elif self.display_method == 'save':
                     plt.savefig("result.png")
 
+
 model = FoilImageClassifier()
 
 data_parser = ClassificationDataManager()
@@ -113,10 +117,12 @@ y_pool = np.delete(y_train, initial_idx, axis=0)
 
 print(len(X_train), len(X_pool), len(X_test))
 
+
 def random_query_strategy(classifier, X, n_instances=1):
     query_idx = np.random.choice(range(len(X)), size=n_instances, replace=False)
     print(f"Seleted idx by random: {query_idx}")
     return query_idx, X[query_idx]
+
 
 def uncertainty_sampling_strategy(classifier, X, n_instances=1):
     probs = np.array(classifier.predict_proba(X))
@@ -125,10 +131,18 @@ def uncertainty_sampling_strategy(classifier, X, n_instances=1):
     print(f"Seleted to label: {query_idx}")
     return query_idx, X[query_idx]
 
+
+# learner = ActiveLearner(
+#     estimator=model,
+#     # query_strategy=uncertainty_sampling_strategy,
+#     query_strategy=representativeness_query_strategy,
+#     X_training=X_initial, y_training=y_initial
+# )
+
 learner = ActiveLearner(
     estimator=model,
     # query_strategy=uncertainty_sampling_strategy,
-    query_strategy=representativeness_query_strategy,
+    query_strategy = informativeness_query_strategy,
     X_training=X_initial, y_training=y_initial
 )
 
