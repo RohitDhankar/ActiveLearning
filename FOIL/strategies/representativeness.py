@@ -19,6 +19,16 @@ def representativeness_query_strategy(classifier: ActiveLearner, X, n_instances=
     print(f"Selected idx by representative: {X_utility_sorted_idx[-n_instances:]}")
     return X_utility_sorted_idx[-n_instances:], X[-n_instances:]
 
+def compute_rep_against_all(x, X):
+    """
+    Compute utility of x against all other data in X.
+    """
+    density = 0
+    for i in range(len(X)):
+        if x == X[i]:
+            continue
+        density += similarity_sample(x, X[i])
+    return density / (len(X) - 1)
 
 # Helpers
 
