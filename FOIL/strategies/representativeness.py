@@ -4,6 +4,8 @@ from modAL.models import ActiveLearner
 import sys
 import os
 
+from strategies.utils import *
+
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 from FoilModel import FoilImageClassifier
@@ -38,14 +40,15 @@ def compute_utility(X, model: FoilImageClassifier):
             xi_overlap_vec = featurelize_overlap(X[i], X[j])
 
             xi_vec = np.array(xi_basic_vec + xi_overlap_vec)
-            #3 xj
+            ## xj
             xj_basic_score = X_vec_basic[j]
             xj_overlap_vec = featurelize_overlap(X[i], X[j])
 
             xj_vec = np.array(xj_basic_score + xj_overlap_vec)
 
             # calculate similarity
-            density += compute_similarity_measure(xi_vec, xj_vec)
+            # density += compute_similarity_measure(xi_vec, xj_vec)
+            density += similarity_sample(X[i], X[j])
         result.append(density / (n - 1))
     
     
