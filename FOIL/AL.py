@@ -12,7 +12,10 @@ from sklearn.model_selection import train_test_split
 
 from FoilModel import FoilImageClassifier
 from data import ClassificationDataManager
-from FOIL.strategies.informativeness import informativeness_query_strategy
+from FOIL.strategies.informativeness import *
+from FOIL.strategies.diversity import diversity_sampling_strategy_global
+from FOIL.strategies.utils import *
+from FOIL.strategies.representativeness import *
 
 np.random.seed(1)
 
@@ -86,10 +89,11 @@ class ActiveLearningManager:
                 plt.xlabel(f"Query(+{n_instances} instance(s) per round)")
                 plt.ylabel('Accuracy')
                 plt.legend()
-                if self.display_method == 'show':
-                    plt.show()
-                elif self.display_method == 'save':
-                    plt.savefig("result.png")
+                plt.savefig("result.png")
+                # if self.display_method == 'show':
+                #     plt.show()
+                # elif self.display_method == 'save':
+                #     plt.savefig("result.png")
 
 
 model = FoilImageClassifier()
@@ -114,6 +118,40 @@ y_pool = np.delete(y_train, initial_idx, axis=0)
 
 print(len(X_train), len(X_pool), len(X_test))
 
+# Strategy 1
+# Pick first m samples from informativeness result
+# informativeness_query_strategy(classifier: ActiveLearner, X, n_instances=m)
+# put the result into diversity_sampling_strategy_global(classifier, result, n_instances=4)
+# The centroid is the final batch
+def strategy_1(classifier, X, n_instances=1):
+    # intermediate set 100
+    m = 50
+    interm_idx, interm_set = informativeness_query_strategy(classifier, X, n_instances=m)
+    return diversity_sampling_strategy_global(classifier, interm_set, n_instances)
+
+# Strategy 2
+def strategy_2(classifier, X, n_instances=1):
+    result = []
+    batch = []
+    for sample in X:
+        # lambda trade-off 0.5
+        result.append(0.3 * measure_informativeness_certain(X, sample) + 0.7 * compute_rep_against_all(sample, X))
+    order = np.argsort(-np.array(result))
+    for idx in order:
+        if not result:
+            batch.append(idx)
+        else:
+            add = 1
+            for sam in batch:
+                # Threshold 0.5
+                if similarity_sample(X[idx], X[sam]) > 0.8:
+                    add = 0
+            if add:
+                batch.append(idx)
+        if len(batch) == n_instances:
+            break
+    return batch, np.array(X)[batch]
+
 
 def random_query_strategy(classifier, X, n_instances=1):
     query_idx = np.random.choice(range(len(X)), size=n_instances, replace=False)
@@ -135,17 +173,21 @@ def uncertainty_sampling_strategy(classifier, X, n_instances=1):
 #     query_strategy=representativeness_query_strategy,
 #     X_training=X_initial, y_training=y_initial
 # )
+#
+# print("sim1", similarity_sample(X[27], X[27]))
+# print("sim2", similarity_sample(X[27], X[75]))
+
 
 learner = ActiveLearner(
     estimator=model,
     # query_strategy=uncertainty_sampling_strategy,
-    query_strategy = informativeness_query_strategy,
+    query_strategy = strategy_2,
     X_training=X_initial, y_training=y_initial
 )
 
 active_learner = ActiveLearningManager(learner, X_pool, y_pool, X_test, y_test)
 active_learner.set_display_method('show' if platform.system() == 'Windows' else 'save')
-active_learner.run_against_random(n_queries=20, n_instances=5)
+active_learner.run_against_random(n_queries=15, n_instances=7)
 
 # print(similarity_sample(X_train[2], X_train[1]))
 # print(diversity_sampling_strategy_global(None, X, 5))
